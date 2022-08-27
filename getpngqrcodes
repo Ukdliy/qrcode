@@ -1,0 +1,22 @@
+function myFunction() {
+  var sheetName = "Sheet1"; 
+  var folderId = "1BzpUZPpg079ayxLKHxd1GRoRM7x0aeMF"; 
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  var url = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=";
+  var keys = ["-Tipo:", "-Ubicación:", "-# registro:", "-ID-C:", "-# Serial:", "-Pas:", "-Di I:", "-Asi:", "-RP:", "-Ar:"];
+  var values = sheet.getRange(2, 2, sheet.getLastRow() - 1, 11).getValues()
+    .filter(function(e) {return e.some(function(f) {return f})})
+    .map(function(row) {
+      row.splice(4, 1);
+      return row;
+    });
+  var length = values.length;
+  var reqs = values.map(function(e) {return {url: url + encodeURIComponent(keys.map(function(f, j) {return f + e[j]}).join("\r"))}});
+  var res = UrlFetchApp.fetchAll(reqs);
+  res.forEach(function(r, i) {
+    var blob = r.getBlob().setName(length == values.length ? "row" + (i + 2) + ".png" : "row" + (length + 1) + ".png");
+    DriveApp.getFolderById(folderId).createFile(blob);
+  });
+}
